@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 
 const DB_URL = "https://whitedot-35d2c-default-rtdb.firebaseio.com";
+const HEARTBEAT_INTERVAL = 25000;  // send heartbeat every 25 seconds
+const PRESENCE_TTL = 60000;        // user considered gone after 60 seconds
+
+// Generate a unique ID for this browser session
+const SESSION_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
 
 async function dbGet(path) {
   try {
@@ -8,16 +13,51 @@ async function dbGet(path) {
     return r.ok ? r.json() : null;
   } catch { return null; }
 }
+
 async function dbSet(path, value) {
   try {
-    await fetch(`${DB_URL}/${path}.json`, { method: "PUT", body: JSON.stringify(value) });
+    await fetch(`${DB_URL}/${path}.json`, {
+      method: "PUT",
+      body: JSON.stringify(value),
+    });
   } catch {}
 }
+
+async function dbDelete(path) {
+  try {
+    await fetch(`${DB_URL}/${path}.json`, { method: "DELETE" });
+  } catch {}
+}
+
 async function dbIncrement(path, delta) {
   const current = (await dbGet(path)) || 0;
   const next = Math.max(0, current + delta);
   await dbSet(path, next);
   return next;
+}
+
+// Register this session as alive with a timestamp
+async function heartbeat() {
+  await dbSet(`presence/${SESSION_ID}`, Date.now());
+}
+
+// Count sessions that have sent a heartbeat within PRESENCE_TTL
+async function countActive() {
+  const presence = await dbGet("presence");
+  if (!presence) return 1;
+  const now = Date.now();
+  const active = Object.values(presence).filter(ts => now - ts < PRESENCE_TTL);
+  return Math.max(1, active.length);
+}
+
+// Remove stale sessions older than PRESENCE_TTL
+async function cleanStale() {
+  const presence = await dbGet("presence");
+  if (!presence) return;
+  const now = Date.now();
+  for (const [id, ts] of Object.entries(presence)) {
+    if (now - ts > PRESENCE_TTL) await dbDelete(`presence/${id}`);
+  }
 }
 
 export default function WhiteDot() {
@@ -71,7 +111,6 @@ export default function WhiteDot() {
   };
 
   const startToasts = () => {
-    // Show first one quickly then randomise intervals
     setTimeout(showToast, 1500);
     const schedule = () => {
       const delay = 6000 + Math.random() * 10000;
@@ -83,7 +122,7 @@ export default function WhiteDot() {
   const stopToasts = () => clearTimeout(toastRef.current);
   const timerRef = useRef(null);
   const pollRef = useRef(null);
-  const cleanupRef = useRef(null);
+  const heartbeatRef = useRef(null);
   const wakeLockRef = useRef(null);
 
   const requestWakeLock = async () => {
@@ -105,32 +144,47 @@ export default function WhiteDot() {
 
   useEffect(() => {
     let mounted = true;
+
     const init = async () => {
-      await dbIncrement("activeUsers", 1);
+      // Register presence immediately
+      await heartbeat();
+      await cleanStale();
+
+      // Poll live count every 10 seconds
       const poll = async () => {
         if (!mounted) return;
-        const active = await dbGet("activeUsers");
+        const active = await countActive();
         const total = await dbGet("totalSessions");
         if (mounted) {
-          setLiveCount(Math.max(1, active || 1));
+          setLiveCount(active);
           setTotalSessions(total || 0);
         }
       };
+
       await poll();
-      pollRef.current = setInterval(poll, 5000);
+      pollRef.current = setInterval(poll, 10000);
+
+      // Send heartbeat every 25 seconds to stay alive
+      heartbeatRef.current = setInterval(async () => {
+        await heartbeat();
+      }, HEARTBEAT_INTERVAL);
     };
+
     init();
     setTimeout(() => setFade(true), 120);
 
-    cleanupRef.current = async () => { await dbIncrement("activeUsers", -1); };
-    window.addEventListener("beforeunload", cleanupRef.current);
+    // On leave — remove this session from presence immediately
+    const onLeave = () => dbDelete(`presence/${SESSION_ID}`);
+    window.addEventListener("beforeunload", onLeave);
+    window.addEventListener("pagehide", onLeave);
+
     return () => {
       mounted = false;
       clearInterval(pollRef.current);
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        window.removeEventListener("beforeunload", cleanupRef.current);
-      }
+      clearInterval(heartbeatRef.current);
+      onLeave();
+      window.removeEventListener("beforeunload", onLeave);
+      window.removeEventListener("pagehide", onLeave);
     };
   }, []);
 
