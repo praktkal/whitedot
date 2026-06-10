@@ -1,9 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Project is served from https://praktkal.github.io/whitedot/, so assets
-// must be referenced under the /whitedot/ base path.
+// Served from the domain root on Vercel, so assets resolve under "/".
 export default defineConfig({
   plugins: [react()],
-  base: "/whitedot/",
 });
