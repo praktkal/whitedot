@@ -33,7 +33,6 @@ export default function WhiteDot() {
   const [doneFade, setDoneFade] = useState(false);
   const [toasts, setToasts] = useState([]);
   const toastRef = useRef(null);
-  const firstToastRef = useRef(null);
 
   const LOCATIONS = [
     { city: "Tokyo", flag: "🇯🇵" },
@@ -73,7 +72,7 @@ export default function WhiteDot() {
 
   const startToasts = () => {
     // Show first one quickly then randomise intervals
-    firstToastRef.current = setTimeout(showToast, 1500);
+    setTimeout(showToast, 1500);
     const schedule = () => {
       const delay = 6000 + Math.random() * 10000;
       toastRef.current = setTimeout(() => { showToast(); schedule(); }, delay);
@@ -81,7 +80,7 @@ export default function WhiteDot() {
     schedule();
   };
 
-  const stopToasts = () => { clearTimeout(toastRef.current); clearTimeout(firstToastRef.current); };
+  const stopToasts = () => clearTimeout(toastRef.current);
   const timerRef = useRef(null);
   const pollRef = useRef(null);
   const cleanupRef = useRef(null);
@@ -195,7 +194,7 @@ export default function WhiteDot() {
     } catch {}
   };
 
-  useEffect(() => () => { clearInterval(timerRef.current); releaseWakeLock(); stopToasts(); }, []);
+  useEffect(() => () => { clearInterval(timerRef.current); releaseWakeLock(); }, []);
 
   const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const progress = ((300 - timeLeft) / 300) * 100;
@@ -218,14 +217,14 @@ export default function WhiteDot() {
           width: 13, height: 13, borderRadius: "50%", background: "#fff",
           boxShadow: "0 0 28px rgba(255,255,255,0.2)",
         }} />
-        <div style={{ fontSize: 18, fontWeight: "400", color: "#fff", letterSpacing: "0.18em", textTransform: "uppercase" }}>
+        <div style={{ fontSize: 24, fontWeight: "400", color: "#fff", letterSpacing: "0.18em", textTransform: "uppercase" }}>
           White Dot
         </div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", fontStyle: "italic", letterSpacing: "0.06em" }}>
+        <div style={{ fontSize: 16, color: "rgba(255,255,255,0.35)", fontStyle: "italic", letterSpacing: "0.06em" }}>
           Collective Stillness
         </div>
         <div style={{ height: 1, width: 32, background: "rgba(255,255,255,0.08)", margin: "6px 0" }} />
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.28)", fontStyle: "italic", letterSpacing: "0.04em", lineHeight: 1.8, maxWidth: 280 }}>
+        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.28)", fontStyle: "italic", letterSpacing: "0.04em", lineHeight: 1.8, maxWidth: 280 }}>
           In a world of noise, we chose silence — together.
           <br />
           Not a tribe. Not a following. Just people, still.
@@ -293,6 +292,7 @@ export default function WhiteDot() {
       </button>
 
       <style>{`
+        @keyframes pd { 0%,100%{opacity:.15;transform:scale(1)} 50%{opacity:.65;transform:scale(1.5)} }
         @keyframes glow { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
       `}</style>
     </div>
@@ -379,6 +379,34 @@ export default function WhiteDot() {
         position: "relative", userSelect: "none",
       }}
     >
+      {/* Home button */}
+      <button
+        onClick={() => {
+          clearInterval(timerRef.current);
+          releaseWakeLock();
+          stopToasts();
+          setStarted(false);
+          setDotBreath(false);
+          setTimeLeft(300);
+          setSessionFade(false);
+          setFade(false);
+          setScreen("entry");
+          setTimeout(() => setFade(true), 100);
+        }}
+        style={{
+          position: "absolute", top: 28, left: 28,
+          background: "transparent", border: "none",
+          color: "rgba(255,255,255,0.2)", fontSize: 11,
+          letterSpacing: "0.2em", textTransform: "uppercase",
+          cursor: "pointer", fontFamily: "'Georgia', serif",
+          transition: "color 0.3s", padding: "4px 0",
+        }}
+        onMouseEnter={e => e.target.style.color = "rgba(255,255,255,0.6)"}
+        onMouseLeave={e => e.target.style.color = "rgba(255,255,255,0.2)"}
+      >
+        ← home
+      </button>
+
       {/* Progress line */}
       {started && (
         <div style={{
@@ -425,25 +453,6 @@ export default function WhiteDot() {
           letterSpacing: "0.06em", animation: "fadeUp 0.8s ease forwards",
         }}>
           {fmt(timeLeft)}
-        </div>
-      )}
-
-      {/* Presence toasts */}
-      {toasts.length > 0 && (
-        <div style={{
-          position: "absolute", bottom: 72, left: 0, right: 0,
-          display: "flex", flexDirection: "column", alignItems: "center",
-          gap: 6, pointerEvents: "none",
-        }}>
-          {toasts.map(t => (
-            <div key={t.id} style={{
-              fontSize: 11, color: "rgba(255,255,255,0.3)",
-              letterSpacing: "0.08em", fontStyle: "italic",
-              animation: "toastIn 0.6s ease both",
-            }}>
-              {t.text}
-            </div>
-          ))}
         </div>
       )}
 
