@@ -33,6 +33,7 @@ export default function WhiteDot() {
   const [doneFade, setDoneFade] = useState(false);
   const [toasts, setToasts] = useState([]);
   const toastRef = useRef(null);
+  const firstToastRef = useRef(null);
 
   const LOCATIONS = [
     { city: "Tokyo", flag: "🇯🇵" },
@@ -72,7 +73,7 @@ export default function WhiteDot() {
 
   const startToasts = () => {
     // Show first one quickly then randomise intervals
-    setTimeout(showToast, 1500);
+    firstToastRef.current = setTimeout(showToast, 1500);
     const schedule = () => {
       const delay = 6000 + Math.random() * 10000;
       toastRef.current = setTimeout(() => { showToast(); schedule(); }, delay);
@@ -80,7 +81,7 @@ export default function WhiteDot() {
     schedule();
   };
 
-  const stopToasts = () => clearTimeout(toastRef.current);
+  const stopToasts = () => { clearTimeout(toastRef.current); clearTimeout(firstToastRef.current); };
   const timerRef = useRef(null);
   const pollRef = useRef(null);
   const cleanupRef = useRef(null);
@@ -194,7 +195,7 @@ export default function WhiteDot() {
     } catch {}
   };
 
-  useEffect(() => () => { clearInterval(timerRef.current); releaseWakeLock(); }, []);
+  useEffect(() => () => { clearInterval(timerRef.current); releaseWakeLock(); stopToasts(); }, []);
 
   const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const progress = ((300 - timeLeft) / 300) * 100;
@@ -292,7 +293,6 @@ export default function WhiteDot() {
       </button>
 
       <style>{`
-        @keyframes pd { 0%,100%{opacity:.15;transform:scale(1)} 50%{opacity:.65;transform:scale(1.5)} }
         @keyframes glow { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
       `}</style>
     </div>
@@ -425,6 +425,25 @@ export default function WhiteDot() {
           letterSpacing: "0.06em", animation: "fadeUp 0.8s ease forwards",
         }}>
           {fmt(timeLeft)}
+        </div>
+      )}
+
+      {/* Presence toasts */}
+      {toasts.length > 0 && (
+        <div style={{
+          position: "absolute", bottom: 72, left: 0, right: 0,
+          display: "flex", flexDirection: "column", alignItems: "center",
+          gap: 6, pointerEvents: "none",
+        }}>
+          {toasts.map(t => (
+            <div key={t.id} style={{
+              fontSize: 11, color: "rgba(255,255,255,0.3)",
+              letterSpacing: "0.08em", fontStyle: "italic",
+              animation: "toastIn 0.6s ease both",
+            }}>
+              {t.text}
+            </div>
+          ))}
         </div>
       )}
 
