@@ -154,7 +154,7 @@ export default function WhiteDot() {
       const poll = async () => {
         if (!mounted) return;
         const active = await countActive();
-        const total = await dbGet("totalSessions");
+        const total = await dbGet("totalVisitors");
         if (mounted) {
           setLiveCount(active);
           setTotalSessions(total || 0);
@@ -188,7 +188,10 @@ export default function WhiteDot() {
     };
   }, []);
 
-  const goToManifesto = () => {
+  const goToManifesto = async () => {
+    await dbIncrement("totalVisitors", 1);
+    const updated = await dbGet("totalVisitors");
+    setTotalSessions(updated || 0);
     setManifestoFade(false);
     setScreen("manifesto");
     setTimeout(() => setManifestoFade(true), 100);
@@ -321,10 +324,10 @@ export default function WhiteDot() {
           fontSize: 48, fontWeight: "200", color: "#fff",
           letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 10,
         }}>
-          {typeof count === "number" ? count.toLocaleString() : count}
+          {totalSessions > 0 ? totalSessions.toLocaleString() : "..."}
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", letterSpacing: "0.14em" }}>
-          {liveCount === 1 ? "person here right now" : "people here right now"}
+          people have sat here
         </div>
       </div>
 
