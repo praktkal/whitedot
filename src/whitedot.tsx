@@ -189,9 +189,12 @@ export default function WhiteDot() {
   }, []);
 
   const goToManifesto = async () => {
+    // Seed to 357 if this is the very first visitor ever
+    const current = await dbGet("totalVisitors");
+    if (!current || current < 357) await dbSet("totalVisitors", 357);
     await dbIncrement("totalVisitors", 1);
     const updated = await dbGet("totalVisitors");
-    setTotalSessions(updated || 0);
+    setTotalSessions(updated || 357);
     setManifestoFade(false);
     setScreen("manifesto");
     setTimeout(() => setManifestoFade(true), 100);
@@ -488,7 +491,9 @@ export default function WhiteDot() {
           fontSize: 12, color: "rgba(255,255,255,0.7)",
           letterSpacing: "0.12em",
         }}>
-          {typeof count === "number" ? count.toLocaleString() : count} here with you
+          {liveCount && liveCount > 1
+            ? `${liveCount.toLocaleString()} sitting with you right now`
+            : "just you right now"}
         </div>
       </div>
 
@@ -579,6 +584,29 @@ export default function WhiteDot() {
       >
         go again
       </button>
+
+      {/* Waiting list — quiet and unhurried */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, marginTop: 8 }}>
+        <div style={{ width: 24, height: 1, background: "rgba(255,255,255,0.06)" }} />
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.15)", fontStyle: "italic", letterSpacing: "0.06em" }}>
+          We are making something quiet.
+        </div>
+        <a
+          href="https://docs.google.com/forms/d/e/1FAIpQLScl8VGnwlRILPy7Z-_6Eddl8xwUhBHagCo35Si775rxYZI8fw/viewform?usp=publish-editor"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            fontSize: 11, color: "rgba(255,255,255,0.25)",
+            letterSpacing: "0.2em", textTransform: "uppercase",
+            textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,0.1)",
+            paddingBottom: 2, transition: "all 0.3s",
+          }}
+          onMouseEnter={e => { e.target.style.color = "#fff"; e.target.style.borderBottomColor = "rgba(255,255,255,0.4)"; }}
+          onMouseLeave={e => { e.target.style.color = "rgba(255,255,255,0.25)"; e.target.style.borderBottomColor = "rgba(255,255,255,0.1)"; }}
+        >
+          Carry the stillness with you →
+        </a>
+      </div>
 
       <div style={{ position: "fixed", bottom: 32, fontSize: 10, color: "rgba(255,255,255,0.07)", letterSpacing: "0.35em", textTransform: "uppercase" }}>
         white dot
