@@ -6,92 +6,149 @@ const PRODUCTS = [
     book: "Aram",
     chapter: "Chapter 1",
     kural: "Kural 7",
+    tamil: "உற்றநோய் நீக்கி உறாஅமை முற்காக்கும் பெற்றியார்",
     verse: "They alone escape the sorrows of the mind who take refuge at the feet of the incomparable one.",
     price: 95,
-    color: "Black",
   },
   {
     id: "porul-396",
     book: "Porul",
     chapter: "Chapter 40",
     kural: "Kural 396",
+    tamil: "தொட்டனைத் தூறும் மணற்கேணி மாந்தர்க்குக் கற்றனைத் தூறும் அறிவு",
     verse: "The more you dig a sand spring, the more it flows. The more you learn, the more wisdom flows.",
     price: 95,
-    color: "Black",
   },
   {
     id: "aram-121",
     book: "Aram",
     chapter: "Chapter 13",
     kural: "Kural 121",
+    tamil: "அடக்கம் அமரருள் உய்க்கும் அடங்காமை ஆரிருள் உய்த்து விடும்",
     verse: "Self control leads one among the gods. Its absence drives one into deepest darkness.",
     price: 95,
-    color: "Black",
   },
   {
     id: "porul-620",
     book: "Porul",
     chapter: "Chapter 62",
     kural: "Kural 620",
+    tamil: "ஊழையும் உப்பக்கம் காண்பர் உலைவின்றித் தாழாது உஞற்று பவர்",
     verse: "Those who tirelessly strive will even overcome the fate that stands against them.",
     price: 95,
-    color: "Black",
   },
   {
     id: "inbam-1281",
     book: "Inbam",
     chapter: "Chapter 129",
     kural: "Kural 1281",
+    tamil: "உள்ளக் களித்தலும் காண மகிழ்தலும் கள்ளுக்கில் காமத்திற் குண்டு",
     verse: "To think of love is joy. To see it is greater joy still.",
     price: 95,
-    color: "Black",
   },
   {
     id: "aram-101",
     book: "Aram",
     chapter: "Chapter 11",
     kural: "Kural 101",
+    tamil: "செய்யாமல் செய்த உதவிக்கு வையகமும் வானகமும் ஆற்றல் அரிது",
     verse: "One may escape after slaying every goodness — but there is no escape for one who slays gratitude.",
     price: 95,
-    color: "Black",
   },
 ];
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
-// Tee thumbnail component
-function TeeThumb({ product, hovered }) {
+// Detail square — the chest reference as worn (upper left)
+function ChestSquare({ product, size = 300 }) {
   return (
-    <svg viewBox="0 0 240 280" style={{ width: "100%", height: "auto", display: "block" }}>
-      <defs>
-        <linearGradient id={`g-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#242424" />
-          <stop offset="100%" stopColor="#0d0d0d" />
-        </linearGradient>
-      </defs>
-      {/* sleeves */}
-      <path d="M78,48 L38,68 L26,124 L54,133 L64,96 L84,86 Z" fill="#161616" />
-      <path d="M162,48 L202,68 L214,124 L186,133 L176,96 L156,86 Z" fill="#161616" />
-      {/* body */}
-      <path d="M84,42 Q104,33 118,31 Q124,27 120,27 Q136,33 156,42 L176,96 L176,264 Q176,272 168,272 L72,272 Q64,272 64,264 L64,96 Z"
-        fill={`url(#g-${product.id})`} />
-      {/* collar */}
-      <path d="M104,34 Q118,28 132,34 Q126,46 120,47 Q114,46 104,34"
-        fill="none" stroke="#2c2c2c" strokeWidth="4" strokeLinecap="round" />
-      {/* left chest reference — appears on hover */}
-      <g opacity={hovered ? 1 : 0.55} style={{ transition: "opacity 0.4s" }}>
-        <text x="100" y="92" fill="#fff" textAnchor="middle" fontFamily="Georgia,serif" fontSize="6" letterSpacing="1" fontWeight="bold">{product.book.toUpperCase()}</text>
-        <circle cx="100" cy="99" r="1.4" fill="#fff" />
-        <text x="100" y="110" fill="rgba(255,255,255,0.7)" textAnchor="middle" fontFamily="Georgia,serif" fontSize="5" letterSpacing="0.5">{product.kural.toUpperCase()}</text>
-      </g>
-      {/* verse patch lower right */}
-      <rect x="140" y="220" width="30" height="30" rx="2" fill="#1a1a12" stroke="rgba(190,180,140,0.3)" strokeWidth="0.6" strokeDasharray="1.5 1.5" opacity={hovered ? 1 : 0.6} style={{ transition: "opacity 0.4s" }} />
-    </svg>
+    <div style={{
+      width: size, height: size,
+      background: "#0a0a0a",
+      border: "1px solid #1e1e1e",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-start",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* subtle fabric weave texture via faint lines */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px)",
+        pointerEvents: "none",
+      }} />
+      {/* reference — positioned upper-left as worn */}
+      <div style={{
+        position: "absolute",
+        top: size * 0.22,
+        left: size * 0.18,
+        textAlign: "center",
+        fontFamily: "'Georgia', serif",
+      }}>
+        <div style={{ fontSize: size * 0.045, letterSpacing: "0.25em", color: "#fff", fontWeight: 500 }}>
+          {product.book.toUpperCase()}
+        </div>
+        <div style={{ width: size * 0.02, height: size * 0.02, borderRadius: "50%", background: "#fff", margin: `${size * 0.03}px auto` }} />
+        <div style={{ fontSize: size * 0.035, letterSpacing: "0.18em", color: "rgba(255,255,255,0.72)" }}>
+          {product.chapter.toUpperCase()}
+        </div>
+        <div style={{ width: size * 0.02, height: size * 0.02, borderRadius: "50%", background: "#fff", margin: `${size * 0.03}px auto` }} />
+        <div style={{ fontSize: size * 0.035, letterSpacing: "0.18em", color: "rgba(255,255,255,0.72)" }}>
+          {product.kural.toUpperCase()}
+        </div>
+      </div>
+      {/* corner label */}
+      <div style={{ position: "absolute", bottom: 14, left: 16, fontSize: 9, letterSpacing: "0.2em", color: "rgba(255,255,255,0.25)", fontFamily: "'Helvetica Neue', sans-serif" }}>
+        LEFT CHEST
+      </div>
+    </div>
+  );
+}
+
+// Detail square — the verse patch as worn (lower right)
+function PatchSquare({ product, size = 300 }) {
+  return (
+    <div style={{
+      width: size, height: size,
+      background: "#0a0a0a",
+      border: "1px solid #1e1e1e",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px)",
+        pointerEvents: "none",
+      }} />
+      {/* patch — positioned lower-right as worn */}
+      <div style={{
+        position: "absolute",
+        bottom: size * 0.16,
+        right: size * 0.14,
+        width: size * 0.44,
+        padding: size * 0.03,
+        border: "1px dashed rgba(200,185,140,0.4)",
+        textAlign: "center",
+        fontFamily: "'Georgia', serif",
+      }}>
+        <div style={{ fontSize: size * 0.032, color: "rgba(205,190,150,0.9)", lineHeight: 1.5, marginBottom: size * 0.02 }}>
+          {product.tamil}
+        </div>
+        <div style={{ width: size * 0.015, height: size * 0.015, borderRadius: "50%", background: "rgba(205,190,150,0.7)", margin: `${size * 0.025}px auto` }} />
+        <div style={{ fontSize: size * 0.024, color: "rgba(175,165,130,0.85)", lineHeight: 1.5, fontStyle: "italic" }}>
+          {product.verse}
+        </div>
+      </div>
+      <div style={{ position: "absolute", bottom: 14, left: 16, fontSize: 9, letterSpacing: "0.2em", color: "rgba(255,255,255,0.25)", fontFamily: "'Helvetica Neue', sans-serif" }}>
+        LOWER RIGHT · PATCH
+      </div>
+    </div>
   );
 }
 
 export default function WhiteDot() {
-  const [view, setView] = useState("shop"); // shop | product | about
+  const [view, setView] = useState("shop");
   const [selected, setSelected] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
   const [size, setSize] = useState(null);
@@ -114,14 +171,14 @@ export default function WhiteDot() {
   const removeFromCart = (cartId) => setCart(cart.filter(c => c.cartId !== cartId));
   const cartTotal = cart.reduce((sum, i) => sum + i.price, 0);
 
-  const mono = "'Helvetica Neue', Arial, sans-serif";
+  const sans = "'Helvetica Neue', Arial, sans-serif";
 
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#fff",
-      color: "#111",
-      fontFamily: mono,
+      background: "#000",
+      color: "#e8e8e8",
+      fontFamily: sans,
       fontSize: 13,
     }}>
 
@@ -131,71 +188,67 @@ export default function WhiteDot() {
         justifyContent: "space-between",
         alignItems: "center",
         padding: "28px 40px",
-        borderBottom: "1px solid #eee",
+        borderBottom: "1px solid #1a1a1a",
         position: "sticky",
         top: 0,
-        background: "#fff",
+        background: "#000",
         zIndex: 10,
       }}>
-        <div
-          onClick={() => setView("shop")}
-          style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
-        >
-          <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#111" }} />
-          <span style={{ fontSize: 14, letterSpacing: "0.15em", fontWeight: 500 }}>WHITE DOT</span>
+        <div onClick={() => setView("shop")} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+          <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#fff" }} />
+          <span style={{ fontSize: 14, letterSpacing: "0.15em", fontWeight: 500, color: "#fff" }}>WHITE DOT</span>
         </div>
-
         <nav style={{ display: "flex", gap: 32, alignItems: "center", fontSize: 12, letterSpacing: "0.08em" }}>
-          <span onClick={() => setView("shop")} style={{ cursor: "pointer", color: view === "shop" ? "#111" : "#999" }}>SHOP</span>
-          <span onClick={() => setView("about")} style={{ cursor: "pointer", color: view === "about" ? "#111" : "#999" }}>ABOUT</span>
-          <span onClick={() => setCartOpen(true)} style={{ cursor: "pointer" }}>CART ({cart.length})</span>
+          <span onClick={() => setView("shop")} style={{ cursor: "pointer", color: view === "shop" ? "#fff" : "#666" }}>SHOP</span>
+          <span onClick={() => setView("about")} style={{ cursor: "pointer", color: view === "about" ? "#fff" : "#666" }}>ABOUT</span>
+          <span onClick={() => setCartOpen(true)} style={{ cursor: "pointer", color: "#999" }}>CART ({cart.length})</span>
         </nav>
       </header>
 
       {/* ─── SHOP ─── */}
       {view === "shop" && (
         <div>
-          {/* Hero */}
-          <div style={{ textAlign: "center", padding: "80px 24px 64px" }}>
-            <div style={{ fontSize: 12, letterSpacing: "0.25em", color: "#999", marginBottom: 20 }}>COLLECTIVE STILLNESS</div>
-            <div style={{ fontSize: 28, fontWeight: 400, letterSpacing: "0.02em", maxWidth: 520, margin: "0 auto", lineHeight: 1.5, fontFamily: "'Georgia', serif" }}>
+          <div style={{ textAlign: "center", padding: "88px 24px 64px" }}>
+            <div style={{ fontSize: 12, letterSpacing: "0.3em", color: "#666", marginBottom: 22 }}>COLLECTIVE STILLNESS</div>
+            <div style={{ fontSize: 27, fontWeight: 400, maxWidth: 540, margin: "0 auto", lineHeight: 1.55, fontFamily: "'Georgia', serif", color: "#fff" }}>
               One tee. One verse from the Thirukural. Chosen by you.
             </div>
-            <div style={{ fontSize: 13, color: "#888", marginTop: 20, letterSpacing: "0.03em" }}>
+            <div style={{ fontSize: 12, color: "#666", marginTop: 22, letterSpacing: "0.05em" }}>
               Made in Chennai · 280gsm cotton · Embroidered
             </div>
           </div>
 
-          {/* Product grid */}
+          {/* Product grid — chest squares */}
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
             gap: 0,
-            borderTop: "1px solid #eee",
+            borderTop: "1px solid #1a1a1a",
           }}>
-            {PRODUCTS.map((p, i) => (
+            {PRODUCTS.map((p) => (
               <div
                 key={p.id}
                 onClick={() => openProduct(p)}
                 onMouseEnter={() => setHoveredId(p.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 style={{
-                  borderRight: "1px solid #eee",
-                  borderBottom: "1px solid #eee",
-                  padding: "40px 32px 28px",
+                  borderRight: "1px solid #1a1a1a",
+                  borderBottom: "1px solid #1a1a1a",
+                  padding: "44px 44px 32px",
                   cursor: "pointer",
-                  background: hoveredId === p.id ? "#fafafa" : "#fff",
+                  background: hoveredId === p.id ? "#080808" : "#000",
                   transition: "background 0.3s",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                 }}
               >
-                <div style={{ maxWidth: 200, margin: "0 auto 24px" }}>
-                  <TeeThumb product={p} hovered={hoveredId === p.id} />
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 12, letterSpacing: "0.1em", marginBottom: 6 }}>
+                <ChestSquare product={p} size={240} />
+                <div style={{ textAlign: "center", marginTop: 24 }}>
+                  <div style={{ fontSize: 12, letterSpacing: "0.1em", marginBottom: 6, color: "#ddd" }}>
                     {p.book.toUpperCase()} · {p.kural.toUpperCase()}
                   </div>
-                  <div style={{ fontSize: 12, color: "#999" }}>${p.price}</div>
+                  <div style={{ fontSize: 12, color: "#666" }}>${p.price}</div>
                 </div>
               </div>
             ))}
@@ -205,53 +258,49 @@ export default function WhiteDot() {
 
       {/* ─── PRODUCT ─── */}
       {view === "product" && selected && (
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          minHeight: "calc(100vh - 85px)",
-        }}>
-          {/* Left — image */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: "calc(100vh - 85px)" }}>
+          {/* Left — two detail squares */}
           <div style={{
-            background: "#fafafa",
+            background: "#050505",
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            padding: 60,
-            borderRight: "1px solid #eee",
+            gap: 32,
+            padding: 56,
+            borderRight: "1px solid #1a1a1a",
           }}>
-            <div style={{ maxWidth: 380, width: "100%" }}>
-              <TeeThumb product={selected} hovered={true} />
-            </div>
+            <ChestSquare product={selected} size={300} />
+            <PatchSquare product={selected} size={300} />
           </div>
 
           {/* Right — details */}
           <div style={{ padding: "64px 56px", display: "flex", flexDirection: "column", gap: 32, maxWidth: 480 }}>
             <div>
-              <div onClick={() => setView("shop")} style={{ fontSize: 11, color: "#999", letterSpacing: "0.1em", cursor: "pointer", marginBottom: 32 }}>
+              <div onClick={() => setView("shop")} style={{ fontSize: 11, color: "#666", letterSpacing: "0.1em", cursor: "pointer", marginBottom: 32 }}>
                 ← BACK
               </div>
-              <div style={{ fontSize: 20, letterSpacing: "0.05em", marginBottom: 8, fontFamily: "'Georgia', serif" }}>
+              <div style={{ fontSize: 20, letterSpacing: "0.05em", marginBottom: 8, fontFamily: "'Georgia', serif", color: "#fff" }}>
                 {selected.book} · {selected.chapter} · {selected.kural}
               </div>
-              <div style={{ fontSize: 14, color: "#888" }}>${selected.price}</div>
+              <div style={{ fontSize: 14, color: "#666" }}>${selected.price}</div>
             </div>
 
-            {/* Verse */}
             <div style={{
-              borderLeft: "2px solid #111",
+              borderLeft: "2px solid #333",
               paddingLeft: 20,
-              fontSize: 15,
-              lineHeight: 1.7,
-              fontStyle: "italic",
-              color: "#333",
-              fontFamily: "'Georgia', serif",
+              display: "flex", flexDirection: "column", gap: 14,
             }}>
-              {selected.verse}
+              <div style={{ fontSize: 15, lineHeight: 1.7, color: "rgba(205,190,150,0.9)", fontFamily: "'Georgia', serif" }}>
+                {selected.tamil}
+              </div>
+              <div style={{ fontSize: 14, lineHeight: 1.7, fontStyle: "italic", color: "#999", fontFamily: "'Georgia', serif" }}>
+                {selected.verse}
+              </div>
             </div>
 
-            {/* Size selector */}
             <div>
-              <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#999", marginBottom: 14 }}>SIZE</div>
+              <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#666", marginBottom: 14 }}>SIZE</div>
               <div style={{ display: "flex", gap: 8 }}>
                 {SIZES.map(s => (
                   <button
@@ -259,12 +308,10 @@ export default function WhiteDot() {
                     onClick={() => setSize(s)}
                     style={{
                       width: 44, height: 44,
-                      border: size === s ? "1px solid #111" : "1px solid #ddd",
-                      background: size === s ? "#111" : "#fff",
-                      color: size === s ? "#fff" : "#111",
-                      fontSize: 12,
-                      cursor: "pointer",
-                      fontFamily: mono,
+                      border: size === s ? "1px solid #fff" : "1px solid #333",
+                      background: size === s ? "#fff" : "transparent",
+                      color: size === s ? "#000" : "#ccc",
+                      fontSize: 12, cursor: "pointer", fontFamily: sans,
                       transition: "all 0.2s",
                     }}
                   >
@@ -274,30 +321,26 @@ export default function WhiteDot() {
               </div>
             </div>
 
-            {/* Add to cart */}
             <button
               onClick={addToCart}
               disabled={!size}
               style={{
                 padding: "16px",
-                background: size ? "#111" : "#f5f5f5",
-                color: size ? "#fff" : "#bbb",
+                background: size ? "#fff" : "#111",
+                color: size ? "#000" : "#555",
                 border: "none",
-                fontSize: 12,
-                letterSpacing: "0.2em",
+                fontSize: 12, letterSpacing: "0.2em",
                 cursor: size ? "pointer" : "default",
-                fontFamily: mono,
-                transition: "all 0.2s",
+                fontFamily: sans, transition: "all 0.2s",
               }}
             >
               {size ? "ADD TO CART" : "SELECT A SIZE"}
             </button>
 
-            {/* Details */}
-            <div style={{ fontSize: 12, color: "#999", lineHeight: 2, borderTop: "1px solid #eee", paddingTop: 24 }}>
+            <div style={{ fontSize: 12, color: "#666", lineHeight: 2, borderTop: "1px solid #1a1a1a", paddingTop: 24 }}>
               280gsm heavyweight cotton · Made in Chennai, India<br />
-              Reference embroidered on left chest<br />
-              Full verse on 2×2 patch, lower right — Tamil & English<br />
+              Reference embroidered upper left, as worn<br />
+              Verse on a 2×2 patch, lower right — Tamil & English<br />
               Free shipping worldwide
             </div>
           </div>
@@ -307,11 +350,11 @@ export default function WhiteDot() {
       {/* ─── ABOUT ─── */}
       {view === "about" && (
         <div style={{ maxWidth: 620, margin: "0 auto", padding: "100px 32px", textAlign: "center" }}>
-          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#111", margin: "0 auto 40px" }} />
-          <div style={{ fontSize: 22, lineHeight: 1.8, fontFamily: "'Georgia', serif", marginBottom: 40 }}>
+          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#fff", margin: "0 auto 40px" }} />
+          <div style={{ fontSize: 22, lineHeight: 1.8, fontFamily: "'Georgia', serif", marginBottom: 40, color: "#fff" }}>
             White Dot began as five minutes of stillness. It became something to wear.
           </div>
-          <div style={{ fontSize: 14, lineHeight: 2, color: "#666", fontFamily: "'Georgia', serif" }}>
+          <div style={{ fontSize: 14, lineHeight: 2, color: "#888", fontFamily: "'Georgia', serif" }}>
             Each tee carries one verse from the Thirukural — the 2000 year old Tamil text of 1330 couplets on how to live well. You choose the verse that speaks to you. It is embroidered in Tamil and English. The outside stays quiet. The meaning stays with you.
             <br /><br />
             Made in Chennai, from the finest Indian cotton. For people who have stopped needing to be noticed.
@@ -324,49 +367,44 @@ export default function WhiteDot() {
         <div style={{
           position: "fixed", top: 0, right: 0, bottom: 0,
           width: 380, maxWidth: "100vw",
-          background: "#fff",
-          borderLeft: "1px solid #eee",
-          boxShadow: "-8px 0 40px rgba(0,0,0,0.08)",
+          background: "#0a0a0a",
+          borderLeft: "1px solid #1a1a1a",
           zIndex: 50,
           padding: "32px 28px",
-          display: "flex",
-          flexDirection: "column",
+          display: "flex", flexDirection: "column",
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-            <span style={{ fontSize: 13, letterSpacing: "0.15em" }}>CART ({cart.length})</span>
-            <span onClick={() => setCartOpen(false)} style={{ cursor: "pointer", fontSize: 18, color: "#999" }}>×</span>
+            <span style={{ fontSize: 13, letterSpacing: "0.15em", color: "#fff" }}>CART ({cart.length})</span>
+            <span onClick={() => setCartOpen(false)} style={{ cursor: "pointer", fontSize: 18, color: "#666" }}>×</span>
           </div>
 
           {cart.length === 0 ? (
-            <div style={{ color: "#999", fontSize: 13, textAlign: "center", marginTop: 40 }}>
-              Your cart is empty.
-            </div>
+            <div style={{ color: "#555", fontSize: 13, textAlign: "center", marginTop: 40 }}>Your cart is empty.</div>
           ) : (
             <>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 20, overflowY: "auto" }}>
                 {cart.map(item => (
-                  <div key={item.cartId} style={{ display: "flex", gap: 16, borderBottom: "1px solid #f0f0f0", paddingBottom: 20 }}>
-                    <div style={{ width: 60, flexShrink: 0 }}>
-                      <TeeThumb product={item} hovered={false} />
+                  <div key={item.cartId} style={{ display: "flex", gap: 16, borderBottom: "1px solid #1a1a1a", paddingBottom: 20, alignItems: "center" }}>
+                    <div style={{ flexShrink: 0 }}>
+                      <ChestSquare product={item} size={56} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, letterSpacing: "0.05em", marginBottom: 4 }}>{item.book} · {item.kural}</div>
-                      <div style={{ fontSize: 11, color: "#999" }}>Size {item.size} · ${item.price}</div>
+                      <div style={{ fontSize: 12, letterSpacing: "0.05em", marginBottom: 4, color: "#ddd" }}>{item.book} · {item.kural}</div>
+                      <div style={{ fontSize: 11, color: "#666" }}>Size {item.size} · ${item.price}</div>
                     </div>
-                    <span onClick={() => removeFromCart(item.cartId)} style={{ cursor: "pointer", color: "#ccc", fontSize: 16 }}>×</span>
+                    <span onClick={() => removeFromCart(item.cartId)} style={{ cursor: "pointer", color: "#555", fontSize: 16 }}>×</span>
                   </div>
                 ))}
               </div>
-
-              <div style={{ borderTop: "1px solid #eee", paddingTop: 20, marginTop: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20, fontSize: 13 }}>
+              <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: 20, marginTop: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20, fontSize: 13, color: "#fff" }}>
                   <span>TOTAL</span>
                   <span>${cartTotal}</span>
                 </div>
                 <button style={{
                   width: "100%", padding: "16px",
-                  background: "#111", color: "#fff", border: "none",
-                  fontSize: 12, letterSpacing: "0.2em", cursor: "pointer", fontFamily: mono,
+                  background: "#fff", color: "#000", border: "none",
+                  fontSize: 12, letterSpacing: "0.2em", cursor: "pointer", fontFamily: sans,
                 }}>
                   CHECKOUT
                 </button>
@@ -378,12 +416,12 @@ export default function WhiteDot() {
 
       {/* ─── Footer ─── */}
       <footer style={{
-        borderTop: "1px solid #eee",
+        borderTop: "1px solid #1a1a1a",
         padding: "40px",
         display: "flex",
         justifyContent: "space-between",
         fontSize: 11,
-        color: "#999",
+        color: "#555",
         letterSpacing: "0.08em",
       }}>
         <span>WHITE DOT · CHENNAI</span>
