@@ -200,7 +200,10 @@ export default function WhiteDot() {
         <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#fff" }} />
         <span style={{ fontSize: 13, letterSpacing: "0.15em", fontWeight: 500, color: "#fff" }}>WHITE DOT</span>
       </div>
-      <span onClick={() => go("concepts")} style={{ fontSize: 11, letterSpacing: "0.1em", color: "#666", cursor: "pointer" }}>ALL CONCEPTS</span>
+      <nav style={{ display: "flex", gap: 28, alignItems: "center" }}>
+        <span onClick={() => go("landing")} style={{ fontSize: 11, letterSpacing: "0.1em", color: "#666", cursor: "pointer" }}>HOME</span>
+        <span onClick={() => go("concepts")} style={{ fontSize: 11, letterSpacing: "0.1em", color: "#666", cursor: "pointer" }}>ALL CONCEPTS</span>
+      </nav>
     </header>
   );
 
@@ -211,10 +214,7 @@ export default function WhiteDot() {
         <Header />
         <div style={{ textAlign: "center", padding: "80px 24px 56px", maxWidth: 560, margin: "0 auto" }}>
           <div style={{ fontSize: 20, lineHeight: 1.7, fontFamily: "'Georgia', serif", color: "#fff", fontStyle: "italic" }}>
-            Concept clothing. Wisdom from cultures across the world — worn quietly.
-          </div>
-          <div style={{ fontSize: 13, color: "#666", marginTop: 20, lineHeight: 1.8 }}>
-            Each collection draws from one tradition. The words stay close to the body. The world need not see them.
+            Concept clothing. Wisdom from cultures across the world.
           </div>
         </div>
 
