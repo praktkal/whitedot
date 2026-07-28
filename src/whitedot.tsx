@@ -327,7 +327,7 @@ export default function WhiteDot() {
           fontSize: 48, fontWeight: "200", color: "#fff",
           letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 10,
         }}>
-          {totalSessions > 0 ? totalSessions.toLocaleString() : "..."}
+          {totalSessions > 0 ? totalSessions.toLocaleString() : "357"}
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", letterSpacing: "0.14em" }}>
           people have sat here
