@@ -1,593 +1,394 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 
-const DB_URL = "https://whitedot-35d2c-default-rtdb.firebaseio.com";
-const HEARTBEAT_INTERVAL = 25000;  // send heartbeat every 25 seconds
-const PRESENCE_TTL = 60000;        // user considered gone after 60 seconds
+const PRODUCTS = [
+  {
+    id: "aram-7",
+    book: "Aram",
+    chapter: "Chapter 1",
+    kural: "Kural 7",
+    verse: "They alone escape the sorrows of the mind who take refuge at the feet of the incomparable one.",
+    price: 95,
+    color: "Black",
+  },
+  {
+    id: "porul-396",
+    book: "Porul",
+    chapter: "Chapter 40",
+    kural: "Kural 396",
+    verse: "The more you dig a sand spring, the more it flows. The more you learn, the more wisdom flows.",
+    price: 95,
+    color: "Black",
+  },
+  {
+    id: "aram-121",
+    book: "Aram",
+    chapter: "Chapter 13",
+    kural: "Kural 121",
+    verse: "Self control leads one among the gods. Its absence drives one into deepest darkness.",
+    price: 95,
+    color: "Black",
+  },
+  {
+    id: "porul-620",
+    book: "Porul",
+    chapter: "Chapter 62",
+    kural: "Kural 620",
+    verse: "Those who tirelessly strive will even overcome the fate that stands against them.",
+    price: 95,
+    color: "Black",
+  },
+  {
+    id: "inbam-1281",
+    book: "Inbam",
+    chapter: "Chapter 129",
+    kural: "Kural 1281",
+    verse: "To think of love is joy. To see it is greater joy still.",
+    price: 95,
+    color: "Black",
+  },
+  {
+    id: "aram-101",
+    book: "Aram",
+    chapter: "Chapter 11",
+    kural: "Kural 101",
+    verse: "One may escape after slaying every goodness — but there is no escape for one who slays gratitude.",
+    price: 95,
+    color: "Black",
+  },
+];
 
-// Generate a unique ID for this browser session
-const SESSION_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
-async function dbGet(path) {
-  try {
-    const r = await fetch(`${DB_URL}/${path}.json`);
-    return r.ok ? r.json() : null;
-  } catch { return null; }
-}
-
-async function dbSet(path, value) {
-  try {
-    await fetch(`${DB_URL}/${path}.json`, {
-      method: "PUT",
-      body: JSON.stringify(value),
-    });
-  } catch {}
-}
-
-async function dbDelete(path) {
-  try {
-    await fetch(`${DB_URL}/${path}.json`, { method: "DELETE" });
-  } catch {}
-}
-
-async function dbIncrement(path, delta) {
-  const current = (await dbGet(path)) || 0;
-  const next = Math.max(0, current + delta);
-  await dbSet(path, next);
-  return next;
-}
-
-// Register this session as alive with a timestamp
-async function heartbeat() {
-  await dbSet(`presence/${SESSION_ID}`, Date.now());
-}
-
-// Count sessions that have sent a heartbeat within PRESENCE_TTL
-async function countActive() {
-  const presence = await dbGet("presence");
-  if (!presence) return 1;
-  const now = Date.now();
-  const active = Object.values(presence).filter(ts => now - ts < PRESENCE_TTL);
-  return Math.max(1, active.length);
-}
-
-// Remove stale sessions older than PRESENCE_TTL
-async function cleanStale() {
-  const presence = await dbGet("presence");
-  if (!presence) return;
-  const now = Date.now();
-  for (const [id, ts] of Object.entries(presence)) {
-    if (now - ts > PRESENCE_TTL) await dbDelete(`presence/${id}`);
-  }
+// Tee thumbnail component
+function TeeThumb({ product, hovered }) {
+  return (
+    <svg viewBox="0 0 240 280" style={{ width: "100%", height: "auto", display: "block" }}>
+      <defs>
+        <linearGradient id={`g-${product.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#242424" />
+          <stop offset="100%" stopColor="#0d0d0d" />
+        </linearGradient>
+      </defs>
+      {/* sleeves */}
+      <path d="M78,48 L38,68 L26,124 L54,133 L64,96 L84,86 Z" fill="#161616" />
+      <path d="M162,48 L202,68 L214,124 L186,133 L176,96 L156,86 Z" fill="#161616" />
+      {/* body */}
+      <path d="M84,42 Q104,33 118,31 Q124,27 120,27 Q136,33 156,42 L176,96 L176,264 Q176,272 168,272 L72,272 Q64,272 64,264 L64,96 Z"
+        fill={`url(#g-${product.id})`} />
+      {/* collar */}
+      <path d="M104,34 Q118,28 132,34 Q126,46 120,47 Q114,46 104,34"
+        fill="none" stroke="#2c2c2c" strokeWidth="4" strokeLinecap="round" />
+      {/* left chest reference — appears on hover */}
+      <g opacity={hovered ? 1 : 0.55} style={{ transition: "opacity 0.4s" }}>
+        <text x="100" y="92" fill="#fff" textAnchor="middle" fontFamily="Georgia,serif" fontSize="6" letterSpacing="1" fontWeight="bold">{product.book.toUpperCase()}</text>
+        <circle cx="100" cy="99" r="1.4" fill="#fff" />
+        <text x="100" y="110" fill="rgba(255,255,255,0.7)" textAnchor="middle" fontFamily="Georgia,serif" fontSize="5" letterSpacing="0.5">{product.kural.toUpperCase()}</text>
+      </g>
+      {/* verse patch lower right */}
+      <rect x="140" y="220" width="30" height="30" rx="2" fill="#1a1a12" stroke="rgba(190,180,140,0.3)" strokeWidth="0.6" strokeDasharray="1.5 1.5" opacity={hovered ? 1 : 0.6} style={{ transition: "opacity 0.4s" }} />
+    </svg>
+  );
 }
 
 export default function WhiteDot() {
-  const [screen, setScreen] = useState("entry");
-  const [liveCount, setLiveCount] = useState(null);
-  const [totalSessions, setTotalSessions] = useState(null);
-  const [fade, setFade] = useState(false);
-  const [started, setStarted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300);
-  const [dotBreath, setDotBreath] = useState(false);
-  const [manifestoFade, setManifestoFade] = useState(false);
-  const [sessionFade, setSessionFade] = useState(false);
-  const [doneFade, setDoneFade] = useState(false);
-  const [toasts, setToasts] = useState([]);
-  const toastRef = useRef(null);
+  const [view, setView] = useState("shop"); // shop | product | about
+  const [selected, setSelected] = useState(null);
+  const [hoveredId, setHoveredId] = useState(null);
+  const [size, setSize] = useState(null);
+  const [cart, setCart] = useState([]);
+  const [cartOpen, setCartOpen] = useState(false);
 
-  const LOCATIONS = [
-    { city: "Tokyo", flag: "🇯🇵" },
-    { city: "London", flag: "🇬🇧" },
-    { city: "New York", flag: "🇺🇸" },
-    { city: "Mumbai", flag: "🇮🇳" },
-    { city: "São Paulo", flag: "🇧🇷" },
-    { city: "Sydney", flag: "🇦🇺" },
-    { city: "Paris", flag: "🇫🇷" },
-    { city: "Dubai", flag: "🇦🇪" },
-    { city: "Singapore", flag: "🇸🇬" },
-    { city: "Toronto", flag: "🇨🇦" },
-    { city: "Berlin", flag: "🇩🇪" },
-    { city: "Lagos", flag: "🇳🇬" },
-    { city: "Seoul", flag: "🇰🇷" },
-    { city: "Mexico City", flag: "🇲🇽" },
-    { city: "Cairo", flag: "🇪🇬" },
-    { city: "Amsterdam", flag: "🇳🇱" },
-    { city: "Bangkok", flag: "🇹🇭" },
-    { city: "Chennai", flag: "🇮🇳" },
-    { city: "Nairobi", flag: "🇰🇪" },
-    { city: "Stockholm", flag: "🇸🇪" },
-  ];
-
-  const showToast = () => {
-    const loc = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
-    const id = Date.now();
-    const messages = [
-      `${loc.flag} ${loc.city} just joined`,
-      `${loc.flag} Someone in ${loc.city} is here`,
-      `${loc.flag} ${loc.city} is still`,
-    ];
-    const text = messages[Math.floor(Math.random() * messages.length)];
-    setToasts(prev => [...prev.slice(-2), { id, text }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+  const openProduct = (p) => {
+    setSelected(p);
+    setSize(null);
+    setView("product");
+    window.scrollTo(0, 0);
   };
 
-  const startToasts = () => {
-    setTimeout(showToast, 1500);
-    const schedule = () => {
-      const delay = 6000 + Math.random() * 10000;
-      toastRef.current = setTimeout(() => { showToast(); schedule(); }, delay);
-    };
-    schedule();
+  const addToCart = () => {
+    if (!size) return;
+    setCart([...cart, { ...selected, size, cartId: Date.now() }]);
+    setCartOpen(true);
   };
 
-  const stopToasts = () => clearTimeout(toastRef.current);
-  const timerRef = useRef(null);
-  const pollRef = useRef(null);
-  const heartbeatRef = useRef(null);
-  const wakeLockRef = useRef(null);
+  const removeFromCart = (cartId) => setCart(cart.filter(c => c.cartId !== cartId));
+  const cartTotal = cart.reduce((sum, i) => sum + i.price, 0);
 
-  const requestWakeLock = async () => {
-    try {
-      if ("wakeLock" in navigator) {
-        wakeLockRef.current = await navigator.wakeLock.request("screen");
-      }
-    } catch {}
-  };
+  const mono = "'Helvetica Neue', Arial, sans-serif";
 
-  const releaseWakeLock = async () => {
-    try {
-      if (wakeLockRef.current) {
-        await wakeLockRef.current.release();
-        wakeLockRef.current = null;
-      }
-    } catch {}
-  };
-
-  useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      // Register presence immediately
-      await heartbeat();
-      await cleanStale();
-
-      // Poll live count every 10 seconds
-      const poll = async () => {
-        if (!mounted) return;
-        const active = await countActive();
-        const total = await dbGet("totalVisitors");
-        if (mounted) {
-          setLiveCount(active);
-          setTotalSessions(total || 0);
-        }
-      };
-
-      await poll();
-      pollRef.current = setInterval(poll, 10000);
-
-      // Send heartbeat every 25 seconds to stay alive
-      heartbeatRef.current = setInterval(async () => {
-        await heartbeat();
-      }, HEARTBEAT_INTERVAL);
-    };
-
-    init();
-    setTimeout(() => setFade(true), 120);
-
-    // On leave — remove this session from presence immediately
-    const onLeave = () => dbDelete(`presence/${SESSION_ID}`);
-    window.addEventListener("beforeunload", onLeave);
-    window.addEventListener("pagehide", onLeave);
-
-    return () => {
-      mounted = false;
-      clearInterval(pollRef.current);
-      clearInterval(heartbeatRef.current);
-      onLeave();
-      window.removeEventListener("beforeunload", onLeave);
-      window.removeEventListener("pagehide", onLeave);
-    };
-  }, []);
-
-  const goToManifesto = async () => {
-    // Seed to 357 if this is the very first visitor ever
-    const current = await dbGet("totalVisitors");
-    if (!current || current < 357) await dbSet("totalVisitors", 357);
-    await dbIncrement("totalVisitors", 1);
-    const updated = await dbGet("totalVisitors");
-    setTotalSessions(updated || 357);
-    setManifestoFade(false);
-    setScreen("manifesto");
-    setTimeout(() => setManifestoFade(true), 100);
-  };
-
-  const goToSession = () => {
-    setSessionFade(false);
-    setScreen("session");
-    setTimeout(() => setSessionFade(true), 100);
-  };
-
-  const startTimer = () => {
-    if (started) return;
-    setStarted(true);
-    setDotBreath(true);
-    requestWakeLock();
-    startToasts();
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          releaseWakeLock();
-          stopToasts();
-          playBell();
-          dbIncrement("totalSessions", 1);
-          setTimeout(() => {
-            setDoneFade(false);
-            setScreen("done");
-            setTimeout(() => setDoneFade(true), 100);
-          }, 800);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const playBell = () => {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      // Three gentle bell strikes
-      [0, 1.2, 2.2].forEach((delay, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        // Singing bowl / bell frequency
-        osc.frequency.value = 528 - i * 24;
-        osc.type = "sine";
-        const start = ctx.currentTime + delay;
-        gain.gain.setValueAtTime(0, start);
-        gain.gain.linearRampToValueAtTime(0.35, start + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 3.5);
-        osc.start(start);
-        osc.stop(start + 3.5);
-      });
-    } catch {}
-  };
-
-  useEffect(() => () => { clearInterval(timerRef.current); releaseWakeLock(); }, []);
-
-  const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-  const progress = ((300 - timeLeft) / 300) * 100;
-  const count = liveCount ?? "...";
-
-  // ── ENTRY ──────────────────────────────────────────────
-  if (screen === "entry") return (
-    <div style={{
-      minHeight: "100vh", background: "#000",
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
-      opacity: fade ? 1 : 0, transition: "opacity 1.6s ease",
-      fontFamily: "'Georgia', serif", padding: "48px 32px",
-      textAlign: "center",
-    }}>
-
-      {/* Dot + wordmark + tagline + poetic lines */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, marginBottom: 20 }}>
-        <div style={{
-          width: 13, height: 13, borderRadius: "50%", background: "#fff",
-          boxShadow: "0 0 28px rgba(255,255,255,0.2)",
-        }} />
-        <div style={{ fontSize: 24, fontWeight: "400", color: "#fff", letterSpacing: "0.18em", textTransform: "uppercase" }}>
-          White Dot
-        </div>
-        <div style={{ fontSize: 16, color: "rgba(255,255,255,0.35)", fontStyle: "italic", letterSpacing: "0.06em" }}>
-          Collective Stillness
-        </div>
-        <div style={{ height: 1, width: 32, background: "rgba(255,255,255,0.08)", margin: "6px 0" }} />
-        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.28)", fontStyle: "italic", letterSpacing: "0.04em", lineHeight: 1.8, maxWidth: 280 }}>
-          In a world of noise, we chose silence — together.
-          <br />
-          Not a tribe. Not a following. Just people, still.
-        </div>
-      </div>
-
-      {/* Continent dots */}
-      <div style={{ margin: "36px 0 44px", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "12px 24px" }}>
-          {[
-            { label: "Asia", delay: "0s" },
-            { label: "Europe", delay: "0.4s" },
-            { label: "Americas", delay: "0.8s" },
-            { label: "Africa", delay: "1.2s" },
-            { label: "Oceania", delay: "1.6s" },
-          ].map((c, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{
-                width: 7, height: 7, borderRadius: "50%",
-                background: "#7effc4",
-                boxShadow: "0 0 8px rgba(126,255,196,0.9)",
-                animation: `glow 2.5s ease-in-out infinite`,
-                animationDelay: c.delay,
-                flexShrink: 0,
-              }} />
-              <div style={{
-                fontSize: 12, color: "rgba(255,255,255,0.4)",
-                letterSpacing: "0.18em", textTransform: "uppercase",
-              }}>
-                {c.label}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Live count */}
-      <div style={{ marginBottom: 44, textAlign: "center" }}>
-        <div style={{
-          fontSize: 48, fontWeight: "200", color: "#fff",
-          letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 10,
-        }}>
-          {totalSessions > 0 ? totalSessions.toLocaleString() : "357"}
-        </div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", letterSpacing: "0.14em" }}>
-          people have sat here
-        </div>
-      </div>
-
-      {/* Join button */}
-      <button
-        onClick={goToManifesto}
-        style={{
-          background: "transparent",
-          border: "1px solid rgba(255,255,255,0.2)",
-          color: "rgba(255,255,255,0.55)",
-          fontSize: 12, letterSpacing: "0.28em", textTransform: "uppercase",
-          padding: "18px 56px", borderRadius: "1px",
-          cursor: "pointer", fontFamily: "'Georgia', serif", transition: "all 0.4s",
-        }}
-        onMouseEnter={e => { e.target.style.borderColor = "rgba(255,255,255,0.6)"; e.target.style.color = "#fff"; }}
-        onMouseLeave={e => { e.target.style.borderColor = "rgba(255,255,255,0.2)"; e.target.style.color = "rgba(255,255,255,0.55)"; }}
-      >
-        join
-      </button>
-
-      <style>{`
-        @keyframes pd { 0%,100%{opacity:.15;transform:scale(1)} 50%{opacity:.65;transform:scale(1.5)} }
-        @keyframes glow { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
-      `}</style>
-    </div>
-  );
-
-  // ── MANIFESTO ──────────────────────────────────────────
-  if (screen === "manifesto") return (
-    <div style={{
-      minHeight: "100vh", background: "#000",
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
-      opacity: manifestoFade ? 1 : 0, transition: "opacity 1.2s ease",
-      fontFamily: "'Georgia', serif", padding: "48px 36px",
-      textAlign: "center",
-    }}>
-
-      {/* Live count — subtle top */}
-      <div style={{
-        position: "absolute", top: 36,
-        fontSize: 11, color: "rgba(255,255,255,0.18)",
-        letterSpacing: "0.15em",
-      }}>
-        {typeof count === "number" ? count.toLocaleString() : count} here with you
-      </div>
-
-      {/* Manifesto lines */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 28, maxWidth: 300, marginBottom: 72 }}>
-        {[
-          "There is nothing to do.",
-          "No content.",
-          "No notifications.",
-          "No scrolling.",
-          "Just be here.",
-        ].map((line, i) => (
-          <div key={i} style={{
-            fontSize: i === 0 || i === 4 ? 22 : 17,
-            fontWeight: "200",
-            color: i === 0 || i === 4 ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.38)",
-            letterSpacing: "0.03em",
-            lineHeight: 1.4,
-            fontStyle: i === 4 ? "italic" : "normal",
-            animation: `fadeUp 0.8s ease ${i * 0.18}s both`,
-          }}>
-            {line}
-          </div>
-        ))}
-      </div>
-
-      {/* Begin */}
-      <button
-        onClick={goToSession}
-        style={{
-          background: "transparent",
-          border: "1px solid rgba(255,255,255,0.15)",
-          color: "rgba(255,255,255,0.4)",
-          fontSize: 11, letterSpacing: "0.3em", textTransform: "uppercase",
-          padding: "16px 48px", borderRadius: "1px",
-          cursor: "pointer", fontFamily: "'Georgia', serif", transition: "all 0.4s",
-          animation: "fadeUp 0.8s ease 1s both",
-        }}
-        onMouseEnter={e => { e.target.style.borderColor = "rgba(255,255,255,0.5)"; e.target.style.color = "#fff"; }}
-        onMouseLeave={e => { e.target.style.borderColor = "rgba(255,255,255,0.15)"; e.target.style.color = "rgba(255,255,255,0.4)"; }}
-      >
-        I'm ready
-      </button>
-
-      <style>{`
-        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-      `}</style>
-    </div>
-  );
-
-  // ── SESSION ────────────────────────────────────────────
-  if (screen === "session") return (
-    <div
-      onClick={!started ? startTimer : undefined}
-      style={{
-        minHeight: "100vh", background: "#000",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        cursor: started ? "default" : "pointer",
-        opacity: sessionFade ? 1 : 0, transition: "opacity 1s ease",
-        fontFamily: "'Georgia', serif",
-        position: "relative", userSelect: "none",
-      }}
-    >
-      {/* Home button */}
-      <button
-        onClick={() => {
-          clearInterval(timerRef.current);
-          releaseWakeLock();
-          stopToasts();
-          setStarted(false);
-          setDotBreath(false);
-          setTimeLeft(300);
-          setSessionFade(false);
-          setFade(false);
-          setScreen("entry");
-          setTimeout(() => setFade(true), 100);
-        }}
-        style={{
-          position: "absolute", top: 28, left: 28,
-          background: "transparent", border: "none",
-          color: "rgba(255,255,255,0.2)", fontSize: 11,
-          letterSpacing: "0.2em", textTransform: "uppercase",
-          cursor: "pointer", fontFamily: "'Georgia', serif",
-          transition: "color 0.3s", padding: "4px 0",
-        }}
-        onMouseEnter={e => e.target.style.color = "rgba(255,255,255,0.6)"}
-        onMouseLeave={e => e.target.style.color = "rgba(255,255,255,0.2)"}
-      >
-        ← home
-      </button>
-
-      {/* Progress line */}
-      {started && (
-        <div style={{
-          position: "absolute", top: 0, left: 0,
-          height: "1px", width: `${progress}%`,
-          background: "rgba(255,255,255,0.2)", transition: "width 1s linear",
-        }} />
-      )}
-
-      {/* Live count — top */}
-      <div style={{
-        position: "absolute", top: 32,
-        display: "flex", alignItems: "center", gap: 8,
-      }}>
-        <div style={{
-          width: 5, height: 5, borderRadius: "50%",
-          background: "#7effc4",
-          boxShadow: "0 0 6px rgba(126,255,196,0.8)",
-          animation: "livepulse 2s ease-in-out infinite",
-        }} />
-        <div style={{
-          fontSize: 12, color: "rgba(255,255,255,0.7)",
-          letterSpacing: "0.12em",
-        }}>
-          {liveCount && liveCount > 1
-            ? `${liveCount.toLocaleString()} sitting with you right now`
-            : "just you right now"}
-        </div>
-      </div>
-
-      {/* The dot */}
-      <div style={{
-        width: 13, height: 13, borderRadius: "50%", background: "#fff",
-        animation: dotBreath ? "breathe 7s ease-in-out infinite" : "none",
-        marginBottom: started ? 52 : 36, transition: "margin-bottom 0.6s ease",
-      }} />
-
-      {/* Timer or tap */}
-      {!started ? (
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.18)", letterSpacing: "0.3em", textTransform: "uppercase" }}>
-          tap to begin
-        </div>
-      ) : (
-        <div style={{
-          fontSize: 44, fontWeight: "200", color: "rgba(255,255,255,0.75)",
-          letterSpacing: "0.06em", animation: "fadeUp 0.8s ease forwards",
-        }}>
-          {fmt(timeLeft)}
-        </div>
-      )}
-
-      {/* Wordmark */}
-      <div style={{
-        position: "absolute", bottom: 32, fontSize: 10,
-        color: "rgba(255,255,255,0.08)", letterSpacing: "0.35em", textTransform: "uppercase",
-      }}>
-        white dot
-      </div>
-
-      <style>{`
-        @keyframes breathe { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(2.6);opacity:0.35} }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes livepulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.4)} }
-        @keyframes toastIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-      `}</style>
-    </div>
-  );
-
-  // ── DONE ───────────────────────────────────────────────
   return (
     <div style={{
-      minHeight: "100vh", background: "#000",
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
-      opacity: doneFade ? 1 : 0, transition: "opacity 1.8s ease",
-      fontFamily: "'Georgia', serif",
-      gap: 28, padding: "48px 32px", textAlign: "center",
+      minHeight: "100vh",
+      background: "#fff",
+      color: "#111",
+      fontFamily: mono,
+      fontSize: 13,
     }}>
-      <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#fff", opacity: 0.45, marginBottom: 8 }} />
 
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", letterSpacing: "0.28em", textTransform: "uppercase" }}>
-        5 minutes · complete
-      </div>
+      {/* ─── Header ─── */}
+      <header style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "28px 40px",
+        borderBottom: "1px solid #eee",
+        position: "sticky",
+        top: 0,
+        background: "#fff",
+        zIndex: 10,
+      }}>
+        <div
+          onClick={() => setView("shop")}
+          style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+        >
+          <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#111" }} />
+          <span style={{ fontSize: 14, letterSpacing: "0.15em", fontWeight: 500 }}>WHITE DOT</span>
+        </div>
 
-      <div style={{ fontSize: 23, fontWeight: "200", color: "rgba(255,255,255,0.7)", lineHeight: 1.7, maxWidth: 300 }}>
-        You gave yourself five minutes the world couldn't have.
-      </div>
+        <nav style={{ display: "flex", gap: 32, alignItems: "center", fontSize: 12, letterSpacing: "0.08em" }}>
+          <span onClick={() => setView("shop")} style={{ cursor: "pointer", color: view === "shop" ? "#111" : "#999" }}>SHOP</span>
+          <span onClick={() => setView("about")} style={{ cursor: "pointer", color: view === "about" ? "#111" : "#999" }}>ABOUT</span>
+          <span onClick={() => setCartOpen(true)} style={{ cursor: "pointer" }}>CART ({cart.length})</span>
+        </nav>
+      </header>
 
-      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.18)", letterSpacing: "0.08em" }}>
-        {liveCount && `${liveCount.toLocaleString()} were still with you`}
-      </div>
+      {/* ─── SHOP ─── */}
+      {view === "shop" && (
+        <div>
+          {/* Hero */}
+          <div style={{ textAlign: "center", padding: "80px 24px 64px" }}>
+            <div style={{ fontSize: 12, letterSpacing: "0.25em", color: "#999", marginBottom: 20 }}>COLLECTIVE STILLNESS</div>
+            <div style={{ fontSize: 28, fontWeight: 400, letterSpacing: "0.02em", maxWidth: 520, margin: "0 auto", lineHeight: 1.5, fontFamily: "'Georgia', serif" }}>
+              One tee. One verse from the Thirukural. Chosen by you.
+            </div>
+            <div style={{ fontSize: 13, color: "#888", marginTop: 20, letterSpacing: "0.03em" }}>
+              Made in Chennai · 280gsm cotton · Embroidered
+            </div>
+          </div>
 
-      {totalSessions > 0 && (
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.1)", letterSpacing: "0.08em" }}>
-          session #{totalSessions.toLocaleString()} ever
+          {/* Product grid */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            gap: 0,
+            borderTop: "1px solid #eee",
+          }}>
+            {PRODUCTS.map((p, i) => (
+              <div
+                key={p.id}
+                onClick={() => openProduct(p)}
+                onMouseEnter={() => setHoveredId(p.id)}
+                onMouseLeave={() => setHoveredId(null)}
+                style={{
+                  borderRight: "1px solid #eee",
+                  borderBottom: "1px solid #eee",
+                  padding: "40px 32px 28px",
+                  cursor: "pointer",
+                  background: hoveredId === p.id ? "#fafafa" : "#fff",
+                  transition: "background 0.3s",
+                }}
+              >
+                <div style={{ maxWidth: 200, margin: "0 auto 24px" }}>
+                  <TeeThumb product={p} hovered={hoveredId === p.id} />
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 12, letterSpacing: "0.1em", marginBottom: 6 }}>
+                    {p.book.toUpperCase()} · {p.kural.toUpperCase()}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#999" }}>${p.price}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      <button
-        onClick={() => {
-          setTimeLeft(300); setStarted(false); setDotBreath(false);
-          setSessionFade(false); setScreen("session");
-          setTimeout(() => setSessionFade(true), 100);
-        }}
-        style={{
-          marginTop: 16, background: "transparent",
-          border: "1px solid rgba(255,255,255,0.12)",
-          color: "rgba(255,255,255,0.3)", fontSize: 11,
-          letterSpacing: "0.28em", textTransform: "uppercase",
-          padding: "16px 44px", borderRadius: "1px",
-          cursor: "pointer", fontFamily: "'Georgia', serif", transition: "all 0.4s",
-        }}
-        onMouseEnter={e => { e.target.style.borderColor = "rgba(255,255,255,0.45)"; e.target.style.color = "#fff"; }}
-        onMouseLeave={e => { e.target.style.borderColor = "rgba(255,255,255,0.12)"; e.target.style.color = "rgba(255,255,255,0.3)"; }}
-      >
-        go again
-      </button>
+      {/* ─── PRODUCT ─── */}
+      {view === "product" && selected && (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          minHeight: "calc(100vh - 85px)",
+        }}>
+          {/* Left — image */}
+          <div style={{
+            background: "#fafafa",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 60,
+            borderRight: "1px solid #eee",
+          }}>
+            <div style={{ maxWidth: 380, width: "100%" }}>
+              <TeeThumb product={selected} hovered={true} />
+            </div>
+          </div>
 
-      <div style={{ position: "fixed", bottom: 32, fontSize: 10, color: "rgba(255,255,255,0.07)", letterSpacing: "0.35em", textTransform: "uppercase" }}>
-        white dot
-      </div>
+          {/* Right — details */}
+          <div style={{ padding: "64px 56px", display: "flex", flexDirection: "column", gap: 32, maxWidth: 480 }}>
+            <div>
+              <div onClick={() => setView("shop")} style={{ fontSize: 11, color: "#999", letterSpacing: "0.1em", cursor: "pointer", marginBottom: 32 }}>
+                ← BACK
+              </div>
+              <div style={{ fontSize: 20, letterSpacing: "0.05em", marginBottom: 8, fontFamily: "'Georgia', serif" }}>
+                {selected.book} · {selected.chapter} · {selected.kural}
+              </div>
+              <div style={{ fontSize: 14, color: "#888" }}>${selected.price}</div>
+            </div>
+
+            {/* Verse */}
+            <div style={{
+              borderLeft: "2px solid #111",
+              paddingLeft: 20,
+              fontSize: 15,
+              lineHeight: 1.7,
+              fontStyle: "italic",
+              color: "#333",
+              fontFamily: "'Georgia', serif",
+            }}>
+              {selected.verse}
+            </div>
+
+            {/* Size selector */}
+            <div>
+              <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#999", marginBottom: 14 }}>SIZE</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {SIZES.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setSize(s)}
+                    style={{
+                      width: 44, height: 44,
+                      border: size === s ? "1px solid #111" : "1px solid #ddd",
+                      background: size === s ? "#111" : "#fff",
+                      color: size === s ? "#fff" : "#111",
+                      fontSize: 12,
+                      cursor: "pointer",
+                      fontFamily: mono,
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Add to cart */}
+            <button
+              onClick={addToCart}
+              disabled={!size}
+              style={{
+                padding: "16px",
+                background: size ? "#111" : "#f5f5f5",
+                color: size ? "#fff" : "#bbb",
+                border: "none",
+                fontSize: 12,
+                letterSpacing: "0.2em",
+                cursor: size ? "pointer" : "default",
+                fontFamily: mono,
+                transition: "all 0.2s",
+              }}
+            >
+              {size ? "ADD TO CART" : "SELECT A SIZE"}
+            </button>
+
+            {/* Details */}
+            <div style={{ fontSize: 12, color: "#999", lineHeight: 2, borderTop: "1px solid #eee", paddingTop: 24 }}>
+              280gsm heavyweight cotton · Made in Chennai, India<br />
+              Reference embroidered on left chest<br />
+              Full verse on 2×2 patch, lower right — Tamil & English<br />
+              Free shipping worldwide
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── ABOUT ─── */}
+      {view === "about" && (
+        <div style={{ maxWidth: 620, margin: "0 auto", padding: "100px 32px", textAlign: "center" }}>
+          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#111", margin: "0 auto 40px" }} />
+          <div style={{ fontSize: 22, lineHeight: 1.8, fontFamily: "'Georgia', serif", marginBottom: 40 }}>
+            White Dot began as five minutes of stillness. It became something to wear.
+          </div>
+          <div style={{ fontSize: 14, lineHeight: 2, color: "#666", fontFamily: "'Georgia', serif" }}>
+            Each tee carries one verse from the Thirukural — the 2000 year old Tamil text of 1330 couplets on how to live well. You choose the verse that speaks to you. It is embroidered in Tamil and English. The outside stays quiet. The meaning stays with you.
+            <br /><br />
+            Made in Chennai, from the finest Indian cotton. For people who have stopped needing to be noticed.
+          </div>
+        </div>
+      )}
+
+      {/* ─── CART DRAWER ─── */}
+      {cartOpen && (
+        <div style={{
+          position: "fixed", top: 0, right: 0, bottom: 0,
+          width: 380, maxWidth: "100vw",
+          background: "#fff",
+          borderLeft: "1px solid #eee",
+          boxShadow: "-8px 0 40px rgba(0,0,0,0.08)",
+          zIndex: 50,
+          padding: "32px 28px",
+          display: "flex",
+          flexDirection: "column",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+            <span style={{ fontSize: 13, letterSpacing: "0.15em" }}>CART ({cart.length})</span>
+            <span onClick={() => setCartOpen(false)} style={{ cursor: "pointer", fontSize: 18, color: "#999" }}>×</span>
+          </div>
+
+          {cart.length === 0 ? (
+            <div style={{ color: "#999", fontSize: 13, textAlign: "center", marginTop: 40 }}>
+              Your cart is empty.
+            </div>
+          ) : (
+            <>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 20, overflowY: "auto" }}>
+                {cart.map(item => (
+                  <div key={item.cartId} style={{ display: "flex", gap: 16, borderBottom: "1px solid #f0f0f0", paddingBottom: 20 }}>
+                    <div style={{ width: 60, flexShrink: 0 }}>
+                      <TeeThumb product={item} hovered={false} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, letterSpacing: "0.05em", marginBottom: 4 }}>{item.book} · {item.kural}</div>
+                      <div style={{ fontSize: 11, color: "#999" }}>Size {item.size} · ${item.price}</div>
+                    </div>
+                    <span onClick={() => removeFromCart(item.cartId)} style={{ cursor: "pointer", color: "#ccc", fontSize: 16 }}>×</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ borderTop: "1px solid #eee", paddingTop: 20, marginTop: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20, fontSize: 13 }}>
+                  <span>TOTAL</span>
+                  <span>${cartTotal}</span>
+                </div>
+                <button style={{
+                  width: "100%", padding: "16px",
+                  background: "#111", color: "#fff", border: "none",
+                  fontSize: 12, letterSpacing: "0.2em", cursor: "pointer", fontFamily: mono,
+                }}>
+                  CHECKOUT
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ─── Footer ─── */}
+      <footer style={{
+        borderTop: "1px solid #eee",
+        padding: "40px",
+        display: "flex",
+        justifyContent: "space-between",
+        fontSize: 11,
+        color: "#999",
+        letterSpacing: "0.08em",
+      }}>
+        <span>WHITE DOT · CHENNAI</span>
+        <span>COLLECTIVE STILLNESS</span>
+      </footer>
     </div>
   );
 }
