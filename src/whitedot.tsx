@@ -11,19 +11,14 @@ const KURALS = [
   { n: 1281, book: "Inbam", chapter: "(Longing)", tamil: "உள்ளக் களித்தலும் காண மகிழ்தலும் கள்ளுக்கு இல் காமத்திற்கு உண்டு", verse: "To think of love is joy. To see it is greater joy still." },
 ];
 
-// Which Kural today — same for everyone, rotates by date
+// A fresh Kural each visit
 function kuralOfTheDay() {
-  const dayNumber = Math.floor(Date.now() / (24 * 60 * 60 * 1000));
-  return KURALS[dayNumber % KURALS.length];
+  return KURALS[Math.floor(Math.random() * KURALS.length)];
 }
 
 const PRODUCTS = [
   { id: "tee-black", name: "The Tee", detail: "Black · white dot · 280gsm cotton", price: 95, kind: "garment", color: "black" },
-  { id: "tee-navy", name: "The Tee", detail: "Navy · white dot · 280gsm cotton", price: 95, kind: "garment", color: "navy" },
-  { id: "sweat-black", name: "The Sweatshirt", detail: "Black · white dot · heavyweight", price: 145, kind: "garment", color: "black" },
-  { id: "sweat-navy", name: "The Sweatshirt", detail: "Navy · white dot · heavyweight", price: 145, kind: "garment", color: "navy" },
   { id: "hoodie-black", name: "The Hooded Sweatshirt", detail: "Black · white dot · heavyweight", price: 165, kind: "garment", color: "black" },
-  { id: "hoodie-navy", name: "The Hooded Sweatshirt", detail: "Navy · white dot · heavyweight", price: 165, kind: "garment", color: "navy" },
   { id: "mug", name: "The Mug", detail: "Matte black stoneware · verse glazed inside", price: 32, kind: "mug", color: "black" },
 ];
 
@@ -241,10 +236,6 @@ export default function WhiteDot() {
         {/* English translation */}
         <div style={{ fontSize: 16, lineHeight: 1.7, color: "rgba(255,255,255,0.55)", fontStyle: "italic" }}>
           "{today.verse}"
-        </div>
-
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", marginTop: 4 }}>
-          {today.book} · {today.chapter}
         </div>
       </div>
 
