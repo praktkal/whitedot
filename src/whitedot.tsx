@@ -1,14 +1,58 @@
 import { useState, useEffect, useRef } from "react";
 
-// A rotating set of Kurals — in production this cycles through all 1330.
+// Thirukural structure:
+// Book (Tamil name + English meaning) → Chapter (Tamil name + English meaning) → Kural (number + verse)
+// This is a small sample. The full text is 1330 kurals across 133 chapters in 3 books.
 const KURALS = [
-  { n: 7, book: "Aram", chapter: "In Praise of God", tamil: "தனக்கு உவமை இல்லாதான் தாள்சேர்ந்தார்க்கு அல்லால் மனக்கவலை மாற்றல் அரிது", verse: "They alone escape the sorrows of the mind who take refuge at the feet of the incomparable one." },
-  { n: 101, book: "Aram", chapter: "Gratitude", tamil: "செய்யாமல் செய்த உதவிக்கு வையகமும் வானகமும் ஆற்றல் அரிது", verse: "One may escape after slaying every goodness — but there is no escape for one who slays gratitude." },
-  { n: 121, book: "Aram", chapter: "Self Control", tamil: "அடக்கம் அமரருள் உய்க்கும் அடங்காமை ஆரிருள் உய்த்து விடும்", verse: "Self control leads one among the gods. Its absence drives one into deepest darkness." },
-  { n: 396, book: "Porul", chapter: "Learning", tamil: "தொட்டனைத்து ஊறும் மணற்கேணி மாந்தர்க்குக் கற்றனைத்து ஊறும் அறிவு", verse: "The more you dig a sand spring, the more it flows. The more you learn, the more wisdom flows." },
-  { n: 425, book: "Porul", chapter: "Wisdom", tamil: "உலகம் தழீஇயது ஒட்பம் மலர்தலும் கூம்பலும் இல்லது அறிவு", verse: "Wisdom is to walk with the world, moving as it moves." },
-  { n: 620, book: "Porul", chapter: "Perseverance", tamil: "ஊழையும் உப்பக்கம் காண்பர் உலைவின்றித் தாழாது உஞற்று பவர்", verse: "Those who tirelessly strive will even overcome the fate that stands against them." },
-  { n: 1281, book: "Inbam", chapter: "(Longing)", tamil: "உள்ளக் களித்தலும் காண மகிழ்தலும் கள்ளுக்கு இல் காமத்திற்கு உண்டு", verse: "To think of love is joy. To see it is greater joy still." },
+  {
+    n: 1,
+    bookName: "Aram", bookMeaning: "Virtue",
+    chapterName: "Kaṭavuḷ Vāḻttu", chapterMeaning: "The Praise of God",
+    tamil: "அகர முதல எழுத்தெல்லாம் ஆதி பகவன் முதற்றே உலகு",
+    verse: "As the letter A is the first of all letters, so the eternal God is first in the world.",
+  },
+  {
+    n: 2,
+    bookName: "Aram", bookMeaning: "Virtue",
+    chapterName: "Kaṭavuḷ Vāḻttu", chapterMeaning: "The Praise of God",
+    tamil: "கற்றதனால் ஆய பயனென்கொல் வாலறிவன் நற்றாள் தொழாஅர் எனின்",
+    verse: "What has learning profited a man, if it has not led him to worship the good feet of the One who is pure knowledge?",
+  },
+  {
+    n: 11,
+    bookName: "Aram", bookMeaning: "Virtue",
+    chapterName: "Vāṉ Ciṟappu", chapterMeaning: "The Blessing of Rain",
+    tamil: "வான்நின்று உலகம் வழங்கி வருதலால் தான்அமிழ்தம் என்றுணரற் பாற்று",
+    verse: "By the continuance of rain the world is sustained; therefore rain is worthy to be called the food of life.",
+  },
+  {
+    n: 101,
+    bookName: "Aram", bookMeaning: "Virtue",
+    chapterName: "Ceynnaṉṟi Aṟital", chapterMeaning: "Gratitude",
+    tamil: "செய்யாமல் செய்த உதவிக்கு வையகமும் வானகமும் ஆற்றல் அரிது",
+    verse: "Even earth and heaven can hardly repay a helpful act done without expectation of return.",
+  },
+  {
+    n: 391,
+    bookName: "Poruḷ", bookMeaning: "Wealth",
+    chapterName: "Kalvi", chapterMeaning: "Learning",
+    tamil: "கற்க கசடறக் கற்பவை கற்றபின் நிற்க அதற்குத் தக",
+    verse: "Learn thoroughly what should be learned, and then live according to that learning.",
+  },
+  {
+    n: 396,
+    bookName: "Poruḷ", bookMeaning: "Wealth",
+    chapterName: "Kalvi", chapterMeaning: "Learning",
+    tamil: "தொட்டனைத் தூறும் மணற்கேணி மாந்தர்க்குக் கற்றனைத் தூறும் அறிவு",
+    verse: "As the sand-spring flows the more you dig it, so learning flows the more a person studies.",
+  },
+  {
+    n: 1281,
+    bookName: "Inbam", bookMeaning: "Love",
+    chapterName: "Puṇarcci Makiḻtal", chapterMeaning: "The Joy of Union",
+    tamil: "உள்ளக் களித்தலும் காண மகிழ்தலும் கள்ளுக்கு இல் காமத்திற்கு உண்டு",
+    verse: "To think of love brings joy, and to see the beloved brings greater joy — a delight wine cannot give.",
+  },
 ];
 
 // A fresh Kural each visit
@@ -31,7 +75,7 @@ export default function WhiteDot() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const timerRef = useRef(null);
   const wakeLockRef = useRef(null);
-  const today = kuralOfTheDay();
+  const [today] = useState(() => kuralOfTheDay());
 
   useEffect(() => { setTimeout(() => setFade(true), 120); }, []);
 
@@ -173,7 +217,7 @@ export default function WhiteDot() {
       <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#fff", opacity: 0.5 }} />
 
       <div style={{ fontSize: 22, lineHeight: 1.7, color: "rgba(255,255,255,0.75)", fontWeight: 300, maxWidth: 360 }}>
-        Carry {today.book === "Inbam" ? "it" : "the day's wisdom"} with you.
+        Carry {today.bookName === "Inbam" ? "it" : "the day's wisdom"} with you.
       </div>
 
       <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", fontStyle: "italic", letterSpacing: "0.05em", maxWidth: 340, lineHeight: 1.7 }}>
@@ -219,9 +263,10 @@ export default function WhiteDot() {
 
       <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#fff", opacity: 0.6 }} />
 
-      <div style={{ fontSize: 11, color: "rgba(160,190,255,0.55)", letterSpacing: "0.2em", textTransform: "uppercase", lineHeight: 1.8 }}>
-        Today<br/>
-        {today.book} · {today.chapter} · Kural {today.n}
+      <div style={{ fontSize: 11, color: "rgba(160,190,255,0.6)", letterSpacing: "0.16em", textTransform: "uppercase", lineHeight: 2 }}>
+        {today.bookName} ({today.bookMeaning})<br/>
+        {today.chapterName} ({today.chapterMeaning})<br/>
+        Kural {today.n}
       </div>
 
       {/* Tamil — the hero */}
@@ -363,7 +408,7 @@ export default function WhiteDot() {
             {/* upper-left chest reference */}
             <div style={{ width: 300, height: 300, background: bg, border: "1px solid #1e1e1e", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 66, left: 54, textAlign: "center", fontFamily: "'Georgia',serif" }}>
-                <div style={{ fontSize: 14, letterSpacing: "0.25em", color: "#fff", fontWeight: 600 }}>{today.book.toUpperCase()}</div>
+                <div style={{ fontSize: 14, letterSpacing: "0.25em", color: "#fff", fontWeight: 600 }}>{today.bookName.toUpperCase()}</div>
                 <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff", margin: "9px auto" }} />
                 <div style={{ fontSize: 11, letterSpacing: "0.18em", color: "rgba(255,255,255,0.72)" }}>KURAL {today.n}</div>
               </div>
@@ -395,7 +440,7 @@ export default function WhiteDot() {
             </div>
 
             <div style={{ fontSize: 12, color: "#888", lineHeight: 2 }}>
-              {today.book} · {today.chapter} · Kural {today.n}<br/>
+              {today.bookName} ({today.bookMeaning}) · {today.chapterName} ({today.chapterMeaning}) · Kural {today.n}<br/>
               Reference embroidered upper left, as worn<br/>
               Verse on a 2×2 patch, lower right — Tamil &amp; English
             </div>
