@@ -8,7 +8,7 @@ const KURALS = [
   { n: 396, book: "Porul", chapter: "Learning", tamil: "தொட்டனைத்து ஊறும் மணற்கேணி மாந்தர்க்குக் கற்றனைத்து ஊறும் அறிவு", verse: "The more you dig a sand spring, the more it flows. The more you learn, the more wisdom flows." },
   { n: 425, book: "Porul", chapter: "Wisdom", tamil: "உலகம் தழீஇயது ஒட்பம் மலர்தலும் கூம்பலும் இல்லது அறிவு", verse: "Wisdom is to walk with the world, moving as it moves." },
   { n: 620, book: "Porul", chapter: "Perseverance", tamil: "ஊழையும் உப்பக்கம் காண்பர் உலைவின்றித் தாழாது உஞற்று பவர்", verse: "Those who tirelessly strive will even overcome the fate that stands against them." },
-  { n: 1281, book: "Inbam", chapter: "Longing", tamil: "உள்ளக் களித்தலும் காண மகிழ்தலும் கள்ளுக்கு இல் காமத்திற்கு உண்டு", verse: "To think of love is joy. To see it is greater joy still." },
+  { n: 1281, book: "Inbam", chapter: "(Longing)", tamil: "உள்ளக் களித்தலும் காண மகிழ்தலும் கள்ளுக்கு இல் காமத்திற்கு உண்டு", verse: "To think of love is joy. To see it is greater joy still." },
 ];
 
 // Which Kural today — same for everyone, rotates by date
